@@ -7,6 +7,7 @@ using Content.Shared.Interaction.Events;
 using Content.Shared.Inventory;
 using Content.Shared.Item;
 using Content.Shared.Movement.Components;
+using Content.Shared.Movement.Pulling.Components;
 using Content.Shared.Popups;
 using Content.Shared.Strip.Components;
 using Content.Shared.Tag;
@@ -19,6 +20,7 @@ using Robust.Shared.Random;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using Content.Shared.Movement.Pulling.Systems;
 
 namespace Content.Shared.Starlight.Restrict;
 public abstract partial class SharedRestrictNestingItemSystem : EntitySystem
@@ -29,6 +31,7 @@ public abstract partial class SharedRestrictNestingItemSystem : EntitySystem
     [Dependency] private readonly SharedContainerSystem _containerSystem = default!;
     [Dependency] private readonly SharedInteractionSystem _interactionSystem = default!;
     [Dependency] private readonly ActionBlockerSystem _actionBlockerSystem = default!;
+    [Dependency] private readonly PullingSystem _pullingSystem = default!;
     public override void Initialize()
     {
         //register a new verb for picking up the mob
@@ -169,6 +172,10 @@ public abstract partial class SharedRestrictNestingItemSystem : EntitySystem
         {
             _popup.PopupClient(Loc.GetString("restrict-nesting-item-cant-pickup", ("user", ent)), args.User, args.User);
             return;
+        }
+        if (TryComp(ent, out PullableComponent ? pullable))
+        {
+            _pullingSystem.TryStopPull(ent, pullable, args.User);
         }
 
         //if we get here, we can pickup the item
